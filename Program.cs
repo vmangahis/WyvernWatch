@@ -9,18 +9,29 @@ string tk = iconf.GetSection("github")["publicTk"];
 Console.WriteLine(tk);
 
 
-/*using HttpClient client = new();
+using HttpClient client = new();
 client.DefaultRequestHeaders.Accept.Clear();
-client.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-client.DefaultRequestHeaders.Add("User-Agent", ".NET Foundation Repository Reporter");
 
-await ProcessRepositoriesAsync(client);*/
+client.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+
+client.DefaultRequestHeaders.Add("X-Github-Api-Version",  "2022-11-28");
+
+//client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tk);
+
+client.DefaultRequestHeaders.Add("Authorization", String.Format("Bearer {0}", tk));
+
+client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("WyvernWatch", "1.0"));
+
+
+
+
+await ProcessRepositoriesAsync(client);
 
 
 static async Task ProcessRepositoriesAsync(HttpClient client)
 {
     await using Stream stream =
-    await client.GetStreamAsync("https://api.github.com/orgs/dotnet/repos");
+    await client.GetStreamAsync("https://api.github.com/user/repos?affiliation=owner&sort=pushed&direction=desc");
     var repositories =
         await JsonSerializer.DeserializeAsync<List<Repositories>>(stream);
     
