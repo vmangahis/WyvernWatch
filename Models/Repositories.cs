@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 
 namespace WyvernWatch.Models
 {
-    public record class Repositories([property: JsonPropertyName("name")] string Name, [property: JsonPropertyName("pushed_at")] string UpdatedCommit);
+    public record Repositories([property: JsonPropertyName("name")] string Name, [property: JsonPropertyName("pushed_at")] string UpdatedCommit);
 
 }

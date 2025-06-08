@@ -17,6 +17,11 @@ namespace WyvernWatch.Services.APIClient
         private readonly IConfiguration _iconf;
         private readonly HttpClient? _httpClient;
         private string _apiKey = "";
+        private string dateNow;
+        private string dateTom;
+        private string apiUrl;
+        private string apiUrlDate;
+        private string appName;
 
         public APIClient()
         {
@@ -24,6 +29,10 @@ namespace WyvernWatch.Services.APIClient
             _iconf = _conf.AddUserSecrets<APIClient>().Build();
             _apiKey = _iconf.GetSection("github")["publicTk"];
             _httpClient = new();
+            dateNow = DateTime.Now.Date.ToString("s", CultureInfo.InvariantCulture);
+            dateTom = DateTime.Now.Date.AddDays(1).ToString("s", CultureInfo.InvariantCulture);
+            apiUrl = _iconf.GetRequiredSection("github")["url"];
+            appName = _iconf.GetRequiredSection("app")["appName"];
         }
 
         public async Task Fetch()
@@ -31,10 +40,10 @@ namespace WyvernWatch.Services.APIClient
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
             BuildDateQuery();
-           /* _httpClient.DefaultRequestHeaders.Add("User-Agent", "WyvernWatch");
-                await using Stream st = await _httpClient.GetStreamAsync(_iconf.GetRequiredSection("github")["url"]);
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", appName);
+                await using Stream st = await _httpClient.GetStreamAsync(apiUrlDate);
 
-           await ProcessData(st);*/
+           await ProcessData(st);
         }
 
         public async Task ProcessData(Stream s)
@@ -49,8 +58,8 @@ namespace WyvernWatch.Services.APIClient
 
         private void BuildDateQuery()
         {
-            Console.WriteLine(DateTime.Now.Date.ToString("s",CultureInfo.InvariantCulture));
-            Console.WriteLine(DateTime.Now.AddDays(-1).Date.ToString("s", CultureInfo.InvariantCulture));
+            apiUrlDate = String.Format("{0}&since={1}&before={2}",apiUrl,dateNow,dateTom);
+            
         }
     }
 }
