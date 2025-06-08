@@ -22,6 +22,8 @@ namespace WyvernWatch.Services.APIClient
         private string apiUrl;
         private string apiUrlDate;
         private string appName;
+        private int pageCounter = 1;
+        private bool isLastPage = false;
 
         public APIClient()
         {
@@ -29,10 +31,11 @@ namespace WyvernWatch.Services.APIClient
             _iconf = _conf.AddUserSecrets<APIClient>().Build();
             _apiKey = _iconf.GetSection("github")["publicTk"];
             _httpClient = new();
-            dateNow = DateTime.Now.Date.ToString("s", CultureInfo.InvariantCulture);
-            dateTom = DateTime.Now.Date.AddDays(1).ToString("s", CultureInfo.InvariantCulture);
+            dateNow = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
+            dateTom = DateTime.Now.Date.ToString("s", CultureInfo.InvariantCulture);
             apiUrl = _iconf.GetRequiredSection("github")["url"];
             appName = _iconf.GetRequiredSection("app")["appName"];
+
         }
 
         public async Task Fetch()
@@ -40,16 +43,20 @@ namespace WyvernWatch.Services.APIClient
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
             BuildDateQuery();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", appName);
-                await using Stream st = await _httpClient.GetStreamAsync(apiUrlDate);
 
-           await ProcessData(st);
+            
+
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", appName);
+                await using Stream st = await _httpClient.GetStreamAsync(apiUrlDate + "&page=1");
+
+                await ProcessData(st);
+            
+            
         }
 
         public async Task ProcessData(Stream s)
         {
             var repo = await JsonSerializer.DeserializeAsync<List<Repositories>>(s);
-
             foreach(var r in repo ?? Enumerable.Empty<Repositories>())
             {
                 Console.WriteLine(r);
@@ -59,7 +66,8 @@ namespace WyvernWatch.Services.APIClient
         private void BuildDateQuery()
         {
             apiUrlDate = String.Format("{0}&since={1}&before={2}",apiUrl,dateNow,dateTom);
-            
+            Console.WriteLine(dateNow);
+            Console.WriteLine(dateTom);
         }
     }
 }
