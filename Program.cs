@@ -1,9 +1,18 @@
-﻿using WyvernWatch.Services.APIClient;
-using WyvernWatch.Services.MailClient;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using WyvernWatch.Interfaces;
+using WyvernWatch.Services.MailService;
 
-var mc = new MailClient();
-var api = new APIClient();
+var builder = FunctionsApplication.CreateBuilder(args);
 
-await api.Fetch();
+builder.ConfigureFunctionsWebApplication();
 
-//mc.StartEmail();
+builder.Services
+    .AddApplicationInsightsTelemetryWorkerService()
+    .ConfigureFunctionsApplicationInsights();
+
+builder.Services.AddSingleton<IMailService, MailService>();
+
+builder.Build().Run();

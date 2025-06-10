@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WyvernWatch.Services.MailClient
+namespace WyvernWatch.Interfaces
 {
-    public interface IMailClient
+    public interface IMailService
     {
-        void StartEmail();
-        void BuildEmail();
         void SendEmail();
     }
 }

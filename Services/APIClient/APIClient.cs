@@ -15,12 +15,12 @@ namespace WyvernWatch.Services.APIClient
     {
         private readonly ConfigurationBuilder _conf;
         private readonly IConfiguration _iconf;
-        private readonly HttpClient? _httpClient;
+        private static HttpClient? _httpClient;
         private string _apiKey = "";
-        private string dateNow;
-        private string dateTom;
+        private string dateSince;
+        private string dateBefore;
         private string apiUrl;
-        private string apiUrlDate;
+        private string? apiUrlDate;
         private string appName;
         private int pageCounter = 1;
         private bool isLastPage = false;
@@ -31,8 +31,8 @@ namespace WyvernWatch.Services.APIClient
             _iconf = _conf.AddUserSecrets<APIClient>().Build();
             _apiKey = _iconf.GetSection("github")["publicTk"];
             _httpClient = new();
-            dateNow = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
-            dateTom = DateTime.Now.Date.ToString("s", CultureInfo.InvariantCulture);
+            dateBefore = DateTime.Now.Date.AddDays(1).ToString("s", CultureInfo.InvariantCulture);
+            dateSince = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
             apiUrl = _iconf.GetRequiredSection("github")["url"];
             appName = _iconf.GetRequiredSection("app")["appName"];
 
@@ -42,19 +42,19 @@ namespace WyvernWatch.Services.APIClient
         {
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-            BuildDateQuery();
 
-            
+            AppendDate(apiUrl);
 
-                _httpClient.DefaultRequestHeaders.Add("User-Agent", appName);
-                await using Stream st = await _httpClient.GetStreamAsync(apiUrlDate + "&page=1");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", appName);
+                
+            await using Stream st = await _httpClient.GetStreamAsync(apiUrlDate /* + "&page=1"*/);
 
-                await ProcessData(st);
+            await GetRepositories(st);
             
             
         }
 
-        public async Task ProcessData(Stream s)
+        public async Task GetRepositories(Stream s)
         {
             var repo = await JsonSerializer.DeserializeAsync<List<Repositories>>(s);
             foreach(var r in repo ?? Enumerable.Empty<Repositories>())
@@ -63,11 +63,16 @@ namespace WyvernWatch.Services.APIClient
             }
         }
 
-        private void BuildDateQuery()
+        public async Task GetRepositoryCommits(Stream s)
         {
-            apiUrlDate = String.Format("{0}&since={1}&before={2}",apiUrl,dateNow,dateTom);
-            Console.WriteLine(dateNow);
-            Console.WriteLine(dateTom);
+            var commitRepo = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(s);
+        }
+
+        private void AppendDate(string url)
+        {
+            apiUrlDate = String.Format("{0}&since={1}&before={2}", url, dateSince, dateBefore);
+            Console.WriteLine(dateSince);
+            Console.WriteLine(dateBefore);
         }
     }
 }

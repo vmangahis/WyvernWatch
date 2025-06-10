@@ -9,6 +9,7 @@ namespace WyvernWatch.Services.APIClient
     public interface IAPIClient
     {
         Task Fetch();
-        Task ProcessData(Stream s);
+        Task GetRepositories(Stream s);
+        Task GetRepositoryCommits(Stream s);
     }
 }
