@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WyvernWatch.Interfaces;
+using WyvernWatch.Services.APIClient;
 using WyvernWatch.Services.MailService;
 
 var builder = FunctionsApplication.CreateBuilder(args);
@@ -14,5 +15,9 @@ builder.Services
     .ConfigureFunctionsApplicationInsights();
 
 builder.Services.AddSingleton<IMailService, MailService>();
+
+builder.Services.AddTransient<IAPIClient, APIClient>();
+
+
 
 builder.Build().Run();

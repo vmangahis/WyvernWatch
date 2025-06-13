@@ -9,16 +9,6 @@ namespace WyvernWatch.Models
 {
     public record Repositories(
         [property: JsonPropertyName("name")] 
-        string Name, 
-
-        [property: JsonPropertyName("pushed_at")] 
-        string UpdatedCommit
-
-
-
-        
+        string Name
         );
-        
-      
-
 }

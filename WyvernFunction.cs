@@ -11,16 +11,19 @@ namespace WyvernWatch;
 public class WyvernFunction
 {
     private readonly IMailService mailService;
+    private readonly IAPIClient api;
 
 
-    public WyvernFunction(IMailService ms)
+    public WyvernFunction(IMailService ms, IAPIClient a)
     {
         mailService = ms;
+        api = a;
     }
 
     [Function("WyvernFunction")]
     public void Run([TimerTrigger("0 50 23 * * *")] TimerInfo myTimer)
     {
-        mailService.SendEmail();
+        //mailService.SendEmail();
+        api.Fetch();
     }
 }

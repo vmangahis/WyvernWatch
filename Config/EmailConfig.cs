@@ -18,7 +18,7 @@ namespace WyvernWatch.Config
 
         public EmailConfig()
         {
-            appPassword = iconf.GetSection("mail")["password"];
+            appPassword = Environment.GetEnvironmentVariable("mail_password");
             smtpserver = iconf.GetSection("mail")["smtpserver"];
             smtpport = iconf.GetSection("mail")["smtpport"];
             smtpemail = iconf.GetSection("mail")["smtpemail"];

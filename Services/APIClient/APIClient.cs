@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using WyvernWatch.Interfaces;
 using WyvernWatch.Models;
 
 namespace WyvernWatch.Services.APIClient
@@ -14,28 +15,27 @@ namespace WyvernWatch.Services.APIClient
     public class APIClient : IAPIClient
     {
         private readonly ConfigurationBuilder _conf;
-        private readonly IConfiguration _iconf;
         private static HttpClient? _httpClient;
         private string _apiKey = "";
         private string dateSince;
         private string dateBefore;
-        private string apiUrl;
+        private string? apiUrl;
+        private List<string> ProjectNames;
         private string? apiUrlDate;
-        private string appName;
+        private string? appName;
         private int pageCounter = 1;
         private bool isLastPage = false;
 
         public APIClient()
         {
             _conf = new();
-            _iconf = _conf.AddUserSecrets<APIClient>().Build();
-            _apiKey = _iconf.GetSection("github")["publicTk"];
+            _apiKey = Environment.GetEnvironmentVariable("github_publicTk");
             _httpClient = new();
             dateBefore = DateTime.Now.Date.AddDays(1).ToString("s", CultureInfo.InvariantCulture);
             dateSince = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
-            apiUrl = _iconf.GetRequiredSection("github")["url"];
-            appName = _iconf.GetRequiredSection("app")["appName"];
-
+            apiUrl = Environment.GetEnvironmentVariable("github_url");
+            appName = Environment.GetEnvironmentVariable("appName");
+            ProjectNames = new List<string>();
         }
 
         public async Task Fetch()
@@ -50,8 +50,9 @@ namespace WyvernWatch.Services.APIClient
             await using Stream st = await _httpClient.GetStreamAsync(apiUrlDate /* + "&page=1"*/);
 
             await GetRepositories(st);
-            
-            
+
+            await GetRepositoryCommits();
+
         }
 
         public async Task GetRepositories(Stream s)
@@ -59,13 +60,17 @@ namespace WyvernWatch.Services.APIClient
             var repo = await JsonSerializer.DeserializeAsync<List<Repositories>>(s);
             foreach(var r in repo ?? Enumerable.Empty<Repositories>())
             {
-                Console.WriteLine(r);
+                ProjectNames.Add(r.Name);
             }
+            // Data Structure would be like [{name: WyvernWatch, commitsHash: ["abc", "def"]}],
+
+
         }
 
-        public async Task GetRepositoryCommits(Stream s)
+        public async Task GetRepositoryCommits()
         {
-            var commitRepo = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(s);
+            // var commitRepo = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(s);
+            apiUrl = Environment.GetEnvironmentVariable("github_baseCommitUrl");
         }
 
         private void AppendDate(string url)
