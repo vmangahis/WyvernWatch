@@ -16,16 +16,18 @@ namespace WyvernWatch.Services.APIClient
     {
         private readonly ConfigurationBuilder _conf;
         private static HttpClient? _httpClient;
-        private string _apiKey = "";
+        private string? _apiKey;
         private string dateSince;
         private string dateBefore;
         private string? apiUrl;
         private List<string> ProjectNames;
+        private List<RepositoryCommits> CommitUrl;
         private string? apiUrlDate;
         private string? appName;
         private int pageCounter = 1;
         private bool isLastPage = false;
-        private string myGithub;
+        private string? myGithub;
+        private Commit? cm;
 
         public APIClient()
         {
@@ -36,14 +38,14 @@ namespace WyvernWatch.Services.APIClient
             dateSince = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
             apiUrl = Environment.GetEnvironmentVariable("github_url");
             myGithub = Environment.GetEnvironmentVariable("github_uname");
-
+            CommitUrl = new List<RepositoryCommits>();
             appName = Environment.GetEnvironmentVariable("appName");
             ProjectNames = new List<string>();
         }
 
         public async Task Fetch()
         {
-            _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+            _httpClient!.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
             AppendDate(apiUrl);
@@ -75,9 +77,20 @@ namespace WyvernWatch.Services.APIClient
             foreach (var pr in ProjectNames) {
                
                 apiUrl = String.Format("{0}/{1}/{2}/commits?since={3}&before={4}", apiUrl, myGithub, pr, dateSince, dateBefore);
-                await using Stream st = await _httpClient.GetStreamAsync(apiUrl);
+                await using Stream st = await _httpClient!.GetStreamAsync(apiUrl);
                 var repoCommits = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(st);
+
+
+                CommitUrl.AddRange(repoCommits!);
+                apiUrl = Environment.GetEnvironmentVariable("github_baseCommitUrl");
             }
+
+            foreach(var r in CommitUrl)
+            {
+                Console.WriteLine(r.ProjectUrl);
+            }
+
+
 
 
         }
