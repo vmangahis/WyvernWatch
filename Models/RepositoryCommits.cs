@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace WyvernWatch.Models
 {
-    public class RepositoryCommits {
-
-        public string? ProjectName;
-
+    public record RepositoryCommits(
+        
         [property: JsonPropertyName("url")]
-        public string[]? commithash;
-       }
+        string ProjectUrl
+
+
+    );
 }

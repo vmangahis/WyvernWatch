@@ -25,6 +25,7 @@ namespace WyvernWatch.Services.APIClient
         private string? appName;
         private int pageCounter = 1;
         private bool isLastPage = false;
+        private string myGithub;
 
         public APIClient()
         {
@@ -34,6 +35,8 @@ namespace WyvernWatch.Services.APIClient
             dateBefore = DateTime.Now.Date.AddDays(1).ToString("s", CultureInfo.InvariantCulture);
             dateSince = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
             apiUrl = Environment.GetEnvironmentVariable("github_url");
+            myGithub = Environment.GetEnvironmentVariable("github_uname");
+
             appName = Environment.GetEnvironmentVariable("appName");
             ProjectNames = new List<string>();
         }
@@ -62,22 +65,26 @@ namespace WyvernWatch.Services.APIClient
             {
                 ProjectNames.Add(r.Name);
             }
-            // Data Structure would be like [{name: WyvernWatch, commitsHash: ["abc", "def"]}],
 
 
         }
 
         public async Task GetRepositoryCommits()
         {
-            // var commitRepo = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(s);
             apiUrl = Environment.GetEnvironmentVariable("github_baseCommitUrl");
+            foreach (var pr in ProjectNames) {
+               
+                apiUrl = String.Format("{0}/{1}/{2}/commits?since={3}&before={4}", apiUrl, myGithub, pr, dateSince, dateBefore);
+                await using Stream st = await _httpClient.GetStreamAsync(apiUrl);
+                var repoCommits = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(st);
+            }
+
+
         }
 
         private void AppendDate(string url)
         {
             apiUrlDate = String.Format("{0}&since={1}&before={2}", url, dateSince, dateBefore);
-            Console.WriteLine(dateSince);
-            Console.WriteLine(dateBefore);
         }
     }
 }
