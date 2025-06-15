@@ -18,6 +18,8 @@ builder.Services.AddSingleton<IMailService, MailService>();
 
 builder.Services.AddTransient<IAPIClient, APIClient>();
 
+builder.Services.AddHttpClient<IAPIClient, APIClient>();
+
 
 
 builder.Build().Run();

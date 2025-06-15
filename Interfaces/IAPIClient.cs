@@ -11,5 +11,6 @@ namespace WyvernWatch.Interfaces
         Task Fetch();
         Task GetRepositories(Stream s);
         Task GetRepositoryCommits();
+        Task GetRepositoryChanges();
     }
 }

@@ -9,8 +9,6 @@ namespace WyvernWatch.Config
 {
     public  class EmailConfig
     {
-        private static readonly ConfigurationBuilder conf = new ConfigurationBuilder();
-        private static readonly IConfiguration iconf = conf.AddUserSecrets<EmailConfig>().Build();
         public  string appPassword;
         public  string smtpserver;
         public  string smtpport;
@@ -18,11 +16,10 @@ namespace WyvernWatch.Config
 
         public EmailConfig()
         {
-            appPassword = Environment.GetEnvironmentVariable("mail_password");
-            smtpserver = iconf.GetSection("mail")["smtpserver"];
-            smtpport = iconf.GetSection("mail")["smtpport"];
-            smtpemail = iconf.GetSection("mail")["smtpemail"];
-
+            appPassword = Environment.GetEnvironmentVariable("mail_password")!;
+            smtpserver = Environment.GetEnvironmentVariable("mail_smtpserver")!;
+            smtpport = Environment.GetEnvironmentVariable("mail_smtpport")!;
+            smtpemail = Environment.GetEnvironmentVariable("mail_smtpemail")!;
         }
 
     }

@@ -24,7 +24,7 @@ namespace WyvernWatch.Services.MailService
 
             _msg.Body = new TextPart("plain")
             {
-                Text = "Azure Function Fired."
+                Text = "Line 1\nLine2" 
             };
 
             using (var cl = new SmtpClient())
