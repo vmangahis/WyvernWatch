@@ -14,9 +14,7 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-builder.Services.AddSingleton<IMailService, MailService>();
-
-builder.Services.AddTransient<IAPIClient, APIClient>();
+builder.Services.AddSingleton<ICourierService, CourierService>();
 
 builder.Services.AddHttpClient<IAPIClient, APIClient>();
 

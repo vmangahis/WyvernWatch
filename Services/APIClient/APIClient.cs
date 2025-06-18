@@ -8,7 +8,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using WyvernWatch.Interfaces;
-using WyvernWatch.Models;
+using WyvernWatch.Models.API;
+using WyvernWatch.Shared.DTO;
 using WyvernWatch.Utilities;
 
 namespace WyvernWatch.Services.APIClient
@@ -20,14 +21,11 @@ namespace WyvernWatch.Services.APIClient
         private string dateSince;
         private string dateBefore;
         private string? apiUrl;
-        private List<string> ProjectNames;
-        private List<RepositoryCommits> CommitUrl;
-        private StringBuilder CommitSummary;
         private string? apiUrlDate;
         private string? appName;
         private string? _githubBaseCommitUrl;
         private string? myGithub;
-        private Commit? cm;
+        private string FinalSummary;
 
         public APIClient(HttpClient httpClient)
         {
@@ -38,62 +36,92 @@ namespace WyvernWatch.Services.APIClient
             dateSince = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
             apiUrl = Environment.GetEnvironmentVariable("github_url");
             myGithub = Environment.GetEnvironmentVariable("github_uname");
-            CommitUrl = new List<RepositoryCommits>();
             appName = Environment.GetEnvironmentVariable("appName");
-            ProjectNames = new List<string>();
-            CommitSummary = new StringBuilder("Here is your summary today:\n");
+            FinalSummary = "";
         }
 
-        public async Task Fetch()
+        public async Task<string> FetchAsync()
         {
-            _httpClient!.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            string url = $"{apiUrl}&since={dateSince}&before={dateBefore}";
+            var headerRequest = new HttpRequestMessage(HttpMethod.Get, url);
+            headerRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github"));
+            headerRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            headerRequest.Headers.UserAgent.ParseAdd(appName);
 
-            AppendDate(apiUrl);
+            try
+            {
 
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", appName);
-                
-            await using Stream st = await _httpClient.GetStreamAsync(apiUrlDate /* + "&page=1"*/);
+                using var res = await _httpClient!.SendAsync(headerRequest);
+                res.EnsureSuccessStatusCode();
+                using Stream st = await res.Content.ReadAsStreamAsync();
+                await GetRepositoriesAsync(st);
 
-            await GetRepositories(st);
 
-            await GetRepositoryCommits();
+            }
+            catch (HttpRequestException httpex)
+            {
+                Console.WriteLine(httpex);
+
+            }
+
+
+            return FinalSummary;
+
 
         }
 
-        public async Task GetRepositories(Stream s)
+        private async Task GetRepositoriesAsync(Stream s)
         {
+            List<string> ProjectNames = new List<string>();
+
+
             var repo = await JsonSerializer.DeserializeAsync<List<Repositories>>(s);
             foreach(var r in repo ?? Enumerable.Empty<Repositories>())
             {
                 ProjectNames.Add(r.Name);
             }
 
+            await GetRepositoryCommitsAsync(ProjectNames);
+
 
         }
 
-        public async Task GetRepositoryCommits()
+        private async Task GetRepositoryCommitsAsync(List<string> ProjectNames)
         {
+            List<RepositoryCommits> CommitUrl = new List<RepositoryCommits>();
             apiUrl = _githubBaseCommitUrl;
             foreach (var pr in ProjectNames) {
+                string url = $"{_githubBaseCommitUrl}/{myGithub}/{pr}/commits?since={dateSince}&before={dateBefore}";
+
+                try {
+                    var headers = new HttpRequestMessage(HttpMethod.Get, url);
+                    headers.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github"));
+                    headers.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+                    headers.Headers.UserAgent.ParseAdd(appName);
+                    using var res = await _httpClient!.SendAsync(headers);
+                    res.EnsureSuccessStatusCode();
+                    using Stream st = res.Content.ReadAsStream();
+                    var repoCommits = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(st);
+
+
+                    CommitUrl.AddRange(repoCommits!);
+                    url = _githubBaseCommitUrl!;
+
+                }
+                catch (HttpRequestException ex) {
+                    Console.WriteLine(ex);
+                }
+
                
-                apiUrl = String.Format("{0}/{1}/{2}/commits?since={3}&before={4}", apiUrl, myGithub, pr, dateSince, dateBefore);
-                using Stream st = await _httpClient!.GetStreamAsync(apiUrl);
-                var repoCommits = await JsonSerializer.DeserializeAsync<List<RepositoryCommits>>(st);
-
-
-                CommitUrl.AddRange(repoCommits!);
-                apiUrl = _githubBaseCommitUrl;
             }
-
-
-            await GetRepositoryChanges();
+            await GetRepositoryChangesAsync(CommitUrl);
 
 
         }
 
-        public async Task GetRepositoryChanges() {
+        private async Task GetRepositoryChangesAsync(List<RepositoryCommits> CommitUrl) {
             string projectName = "";
+            StringBuilder CommitSummary = new StringBuilder("Here is your summary today:\n");
             foreach (var c in CommitUrl) {
                 if (projectName != UrlUtility.GetProjectName(c.ProjectUrl))
                 {
@@ -101,19 +129,33 @@ namespace WyvernWatch.Services.APIClient
                     CommitSummary.AppendLine(projectName);
                 }
 
-                using Stream st = await _httpClient!.GetStreamAsync(c.ProjectUrl);
-                var repoChanges = await JsonSerializer.DeserializeAsync<Commit>(st);
-                repoChanges!.fc.ForEach(f => {
-                    CommitSummary.AppendLine(String.Format("{0} - {1}", f.File, f.FileStatus));               
-                } );
+                try {
+                    var headers = new HttpRequestMessage(HttpMethod.Get, c.ProjectUrl);
+                    headers.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github"));
+                    headers.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+                    headers.Headers.UserAgent.ParseAdd(appName);
+                    using var res = await _httpClient!.SendAsync(headers);
+                    res.EnsureSuccessStatusCode();
+                    using Stream st = await res.Content.ReadAsStreamAsync();
+                    var repoChanges = await JsonSerializer.DeserializeAsync<Commit>(st);
+                    repoChanges!.fc.ForEach(f => {
+                        CommitSummary.AppendLine(String.Format("{0} - {1}", f.File, f.FileStatus));
+                    });
+
+                }
+                catch (HttpRequestException ex) {
+                    Console.WriteLine(ex);
+                }
+                
+
             }
+
+            GetSummary(CommitSummary.ToString());
         }
 
-
-        // this is just a temp function, probably will just be included within the implementations above
-        private void AppendDate(string url)
-        {      
-            apiUrlDate = String.Format("{0}&since={1}&before={2}", url, dateSince, dateBefore);
+        private void GetSummary(string CommitSummary)
+        {
+            FinalSummary = CommitSummary;
         }
     }
 }

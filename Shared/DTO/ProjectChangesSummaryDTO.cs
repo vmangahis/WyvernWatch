@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WyvernWatch.Interfaces
+namespace WyvernWatch.Shared.DTO
 {
-    public interface IMailService
-    {
-        void SendEmail();
-    }
+    public record ProjectChangesSummaryDTO(
+        string Summary
+    );
 }

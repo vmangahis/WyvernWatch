@@ -5,14 +5,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace WyvernWatch.Models
+namespace WyvernWatch.Models.API
 {
     public record CommitDetails(
-        [property: JsonPropertyName("message")]    
+        [property: JsonPropertyName("message")]
          string CommitMessage,
 
         [property: JsonPropertyName("author")]
         CommitAuthor commitAuth
-        
+
     );
 }

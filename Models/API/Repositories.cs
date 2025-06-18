@@ -5,10 +5,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace WyvernWatch.Models
+namespace WyvernWatch.Models.API
 {
     public record Repositories(
-        [property: JsonPropertyName("name")] 
+        [property: JsonPropertyName("name")]
         string Name
         );
 }

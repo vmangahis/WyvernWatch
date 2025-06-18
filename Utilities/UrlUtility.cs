@@ -12,10 +12,6 @@ namespace WyvernWatch.Utilities
         {
             Uri u = new Uri(url);
             string[] s = u.Segments;
-            foreach(var a in s)
-            {
-                Console.WriteLine(a);
-            }
             return s[3].Trim('/');
         }
     }

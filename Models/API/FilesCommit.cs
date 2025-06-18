@@ -5,12 +5,12 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace WyvernWatch.Models
+namespace WyvernWatch.Models.API
 {
     public record FilesCommit(
         [property: JsonPropertyName("filename")]
         string File,
-        
+
         [property: JsonPropertyName("changes")]
         int Changes,
 

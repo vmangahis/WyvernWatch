@@ -10,20 +10,20 @@ namespace WyvernWatch;
 
 public class WyvernFunction
 {
-    private readonly IMailService mailService;
+    private readonly ICourierService courierService;
     private readonly IAPIClient api;
 
 
-    public WyvernFunction(IMailService ms, IAPIClient a)
+    public WyvernFunction(ICourierService ms, IAPIClient a)
     {
-        mailService = ms;
+        courierService = ms;
         api = a;
     }
 
     [Function("WyvernFunction")]
-    public void Run([TimerTrigger("0 50 23 * * *")] TimerInfo myTimer)
+    public async Task Run([TimerTrigger("0 55 23 * * *")] TimerInfo myTimer)
     {
-        //mailService.SendEmail();
-        api.Fetch();
+       string summary = await api.FetchAsync();
+       courierService.SendEmail(summary);
     }
 }
