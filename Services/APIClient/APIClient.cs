@@ -32,8 +32,8 @@ namespace WyvernWatch.Services.APIClient
             _apiKey = Environment.GetEnvironmentVariable("github_publicTk");
             _httpClient = httpClient;
             _githubBaseCommitUrl = Environment.GetEnvironmentVariable("github_baseCommitUrl");
-            dateBefore = DateTime.Now.Date.AddDays(1).ToString("s", CultureInfo.InvariantCulture);
-            dateSince = DateTime.Now.Date.AddDays(-1).ToString("s", CultureInfo.InvariantCulture);
+            dateBefore = DateTime.Now.Date.AddHours(16).ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
+            dateSince = DateTime.Now.Date.AddDays(-1).AddHours(16).ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
             apiUrl = Environment.GetEnvironmentVariable("github_url");
             myGithub = Environment.GetEnvironmentVariable("github_uname");
             appName = Environment.GetEnvironmentVariable("appName");
