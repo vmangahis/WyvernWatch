@@ -35,7 +35,7 @@ namespace WyvernWatch.Services.MailService
 
         public void SendEmail(string msg)
         {
-            string subjectCompose = $"{_subject}{DateTime.Today}";
+            string subjectCompose = $"{_subject} {DateTime.Now.ToString("MMMM d, yyyy")}";
             _msg.From.Add(new MailboxAddress(_senderName, _smtpEmail));
 
             _msg.To.Add(new MailboxAddress("", _smtpEmail));
