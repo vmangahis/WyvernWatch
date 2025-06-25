@@ -21,7 +21,7 @@ public class WyvernFunction
     }
 
     [Function("WyvernFunction")]
-    public async Task Run([TimerTrigger("0 55 23 * * *")] TimerInfo myTimer)
+    public async Task Run([TimerTrigger("0 59 23 * * *")] TimerInfo myTimer)
     {
        string summary = await api.FetchAsync();
        courierService.SendEmail(summary);
